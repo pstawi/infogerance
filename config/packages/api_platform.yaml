@@ -1,0 +1,5 @@
+api_platform:
+    defaults:
+        stateless: true
+    title: 'My API'
+    version: '1.0.0'
