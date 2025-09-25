@@ -4,6 +4,7 @@ import { Box, Typography, Button } from "@mui/material";
 import GenericDataTable from "../components/GenericDataTable";
 import ClientModal from "../components/ClientModal";
 import { getClients, addClient, updateClient, deleteClient } from "../Services/clientsService";
+import theme from "../theme";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
@@ -59,7 +60,18 @@ export default function ClientsPage() {
         <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mb: 2 }}>
           Ajouter un client
         </Button>
-        <GenericDataTable columns={columns} rows={clients} onEdit={handleEdit} onDelete={handleDelete} />
+        <GenericDataTable 
+        columns={columns} 
+        rows={clients} 
+        onEdit={handleEdit} 
+        onDelete={handleDelete} 
+        bordered
+        headerAlign="center"
+        cellAlign="center"
+        headerSx={{ fontSize: 14 }}
+        cellSx={{ fontSize: 13 }}
+        headerSx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}
+        />
         <ClientModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} initialData={editData} />
       </Box>
     </div>

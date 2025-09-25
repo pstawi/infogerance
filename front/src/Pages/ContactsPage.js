@@ -5,6 +5,7 @@ import GenericDataTable from "../components/GenericDataTable";
 import ContactModal from "../components/ContactModal";
 import { getContacts, addContact, updateContact, deleteContact } from "../Services/contactsService";
 import { getClients } from "../Services/clientsService";
+import theme from "../theme";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
@@ -102,7 +103,18 @@ export default function ContactsPage() {
         <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mb: 2 }}>
           Ajouter un contact
         </Button>
-        <GenericDataTable columns={columns} rows={contacts} onEdit={handleEdit} onDelete={handleDelete} />
+        <GenericDataTable 
+        columns={columns} 
+        rows={contacts} 
+        onEdit={handleEdit} 
+        onDelete={handleDelete} 
+        bordered
+        headerAlign="center"
+        cellAlign="center"
+        headerSx={{ fontSize: 14 }}
+        cellSx={{ fontSize: 13 }}
+        headerSx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}
+        />
         <ContactModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} initialData={editData} clients={clientsList} />
       </Box>
     </div>

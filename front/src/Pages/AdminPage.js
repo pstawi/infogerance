@@ -5,6 +5,7 @@ import GenericDataTable from "../components/GenericDataTable";
 import CollaborateurModal from "../components/CollaborateurModal";
 import { getCollaborateurs, addCollaborateur, updateCollaborateur, deleteCollaborateur } from "../Services/collaborateursService";
 import { getRoles } from "../Services/rolesService";
+import theme from "../theme";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
@@ -107,6 +108,12 @@ export default function AdminPage() {
           rows={collaborateurs}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          bordered
+          headerAlign="center"
+          cellAlign="center"
+          headerSx={{ fontSize: 14 }}
+          cellSx={{ fontSize: 13 }}
+          headerSx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}
         />
         <CollaborateurModal
           open={modalOpen}

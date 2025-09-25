@@ -8,6 +8,7 @@ import { getClients } from "../Services/clientsService";
 import { getContacts } from "../Services/contactsService";
 import { getCollaborateurs } from "../Services/collaborateursService";
 import { getStatuts } from "../Services/statutsService";
+import theme from "../theme";
 
 const columns = [
   { field: "numeroTicket", headerName: "N°" },
@@ -112,7 +113,18 @@ export default function TicketsPage() {
         <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mb: 2 }}>
           Créer un ticket
         </Button>
-        <GenericDataTable columns={columns} rows={tickets} onEdit={handleEdit} onDelete={handleDelete} />
+        <GenericDataTable 
+        columns={columns} 
+        rows={tickets} 
+        onEdit={handleEdit} 
+        onDelete={handleDelete} 
+        bordered
+        headerAlign="center"
+        cellAlign="center"
+        headerSx={{ fontSize: 14 }}
+        cellSx={{ fontSize: 13 }}
+        headerSx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}
+        />
         <TicketModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}

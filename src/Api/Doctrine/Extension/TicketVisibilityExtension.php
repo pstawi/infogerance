@@ -5,6 +5,7 @@ namespace App\Api\Doctrine\Extension;
 use ApiPlatform\Doctrine\Orm\Extension\QueryCollectionExtensionInterface;
 use ApiPlatform\Doctrine\Orm\Extension\QueryItemExtensionInterface;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Metadata\Operation;
 use App\Entity\Ticket;
 use App\Entity\Collaborateur;
 use App\Entity\Contact;
@@ -17,7 +18,7 @@ class TicketVisibilityExtension implements QueryCollectionExtensionInterface, Qu
     {
     }
 
-    public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, string $operationName = null): void
+    public function applyToCollection(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if ($resourceClass !== Ticket::class) {
             return;
@@ -25,7 +26,7 @@ class TicketVisibilityExtension implements QueryCollectionExtensionInterface, Qu
         $this->addWhere($queryBuilder);
     }
 
-    public function applyToItem(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, array $identifiers, string $operationName = null, array $context = []): void
+    public function applyToItem(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, array $identifiers, ?Operation $operation = null, array $context = []): void
     {
         if ($resourceClass !== Ticket::class) {
             return;
@@ -42,19 +43,16 @@ class TicketVisibilityExtension implements QueryCollectionExtensionInterface, Qu
         $alias = $rootAliases[0] ?? 'o';
 
         if ($user instanceof Collaborateur) {
-            // Collaborateur: voit tous les tickets (pas de filtre supplémentaire)
             return;
         }
 
         if ($user instanceof Contact) {
-            // Contact: voit seulement les tickets de son client
             $clientParam = ':clientId';
             $qb->andWhere(sprintf('%s.clientId = %s', $alias, $clientParam))
                ->setParameter($clientParam, $user->getClientId());
             return;
         }
 
-        // Non authentifié: ne rien retourner
         $qb->andWhere('1 = 0');
     }
 } 

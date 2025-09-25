@@ -4,22 +4,22 @@ const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#ea5b0c",
-      contrastText: "#ffffff",
+      main: "#ea5b0c", //orange
+      contrastText: "#ffffff", //blanc
     },
     secondary: {
-      main: "#919293",
-      contrastText: "#ffffff",
+      main: "#919293", //gris
+      contrastText: "#ffffff", //blanc
     },
     background: {
-      default: "#f7f7f7",
+      default: "#f7f7f7", //gris clair
       paper: "#ffffff",
     },
     text: {
-      primary: "#313635",
+      primary: "#313635", //gris foncé
       secondary: "#919293",
     },
-    divider: "#e0e0e0",
+    divider: "#e0e0e0", //gris
   },
   shape: {
     borderRadius: 10,

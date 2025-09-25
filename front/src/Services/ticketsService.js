@@ -21,7 +21,10 @@ function toApiPayload(data) {
   if (data.contact) payload.contactId = `/api/contacts/${data.contact}`;
   if (data.collaborateur) payload.collaborateurId = `/api/collaborateurs/${data.collaborateur}`;
   if (data.statut) payload.statutId = `/api/statuts/${data.statut}`;
-  if (data.tpsResolution != null) payload.tpsResolution = data.tpsResolution;
+  if (data.tpsResolution !== "" && data.tpsResolution !== null && data.tpsResolution !== undefined) {
+    const n = Number(data.tpsResolution);
+    if (!Number.isNaN(n)) payload.tpsResolution = n;
+  }
   return payload;
 }
 
