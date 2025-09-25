@@ -6,7 +6,7 @@ import WarningIcon from "@mui/icons-material/Warning";
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/" },
+  { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/tickets" },
   { text: "Collaborateurs", icon: <PeopleIcon />, path: "/admin" },
   { text: "Clients", icon: <DevicesIcon />, path: "/clients" },
   { text: "Contacts", icon: <PeopleIcon />, path: "/contacts" },

@@ -16,5 +16,10 @@ services:
     App\:
         resource: '../src/'
 
+    App\Api\Doctrine\Extension\TicketVisibilityExtension:
+        tags:
+            - { name: 'api_platform.doctrine.orm.query_extension.collection', priority: 64 }
+            - { name: 'api_platform.doctrine.orm.query_extension.item', priority: 64 }
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

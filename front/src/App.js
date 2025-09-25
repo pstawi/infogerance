@@ -3,6 +3,7 @@ import HomePage from "./Pages/HomePage";
 import AdminPage from "./Pages/AdminPage";
 import ClientsPage from "./Pages/ClientsPage";
 import ContactsPage from "./Pages/ContactsPage";
+import TicketsPage from "./Pages/TicketsPage";
 import LoginPage from "./Pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
@@ -20,6 +21,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<HomePage />} />
+          <Route path="/tickets" element={<RequireAuth><TicketsPage /></RequireAuth>} />
           <Route path="/admin" element={<RequireAuth><AdminPage /></RequireAuth>} />
           <Route path="/clients" element={<RequireAuth><ClientsPage /></RequireAuth>} />
           <Route path="/contacts" element={<RequireAuth><ContactsPage /></RequireAuth>} />
