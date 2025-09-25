@@ -1,7 +1,6 @@
-import axios from "axios";
+import api from "./http";
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8000";
-const API_URL = `${BASE_URL}/api/collaborateurs`;
+const API_URL = `/api/collaborateurs`;
 
 function toApiPayload(data) {
   const payload = {
@@ -33,20 +32,20 @@ const JSONLD_HEADERS = { headers: { "Content-Type": "application/ld+json", Accep
 const MERGE_PATCH_HEADERS = { headers: { "Content-Type": "application/merge-patch+json", Accept: "application/ld+json" } };
 
 export async function getCollaborateurs() {
-  const res = await axios.get(API_URL, ACCEPT_JSONLD);
+  const res = await api.get(API_URL, ACCEPT_JSONLD);
   return fromApiListResponse(res.data);
 }
 
 export async function addCollaborateur(data) {
-  const res = await axios.post(API_URL, toApiPayload(data), JSONLD_HEADERS);
+  const res = await api.post(API_URL, toApiPayload(data), JSONLD_HEADERS);
   return res.data;
 }
 
 export async function updateCollaborateur(id, data) {
-  const res = await axios.patch(`${API_URL}/${id}`, toApiPayload(data), MERGE_PATCH_HEADERS);
+  const res = await api.patch(`${API_URL}/${id}`, toApiPayload(data), MERGE_PATCH_HEADERS);
   return res.data;
 }
 
 export async function deleteCollaborateur(id) {
-  await axios.delete(`${API_URL}/${id}`, ACCEPT_JSONLD);
+  await api.delete(`${API_URL}/${id}`, ACCEPT_JSONLD);
 }

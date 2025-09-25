@@ -7,13 +7,14 @@ use App\Repository\CollaborateurRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ApiResource(
     normalizationContext: ['groups' => ['collaborateur:read']],
     denormalizationContext: ['groups' => ['collaborateur:write']]
 )]
 #[ORM\Entity(repositoryClass: CollaborateurRepository::class)]
-class Collaborateur implements PasswordAuthenticatedUserInterface
+class Collaborateur implements PasswordAuthenticatedUserInterface, UserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -93,14 +94,14 @@ class Collaborateur implements PasswordAuthenticatedUserInterface
     }
 
     public function setPassword(string $password): static
-{
-    $this->password = $password;
-    return $this;
-}
-
-    public function eraseCredentials()
     {
-  
+        $this->password = $password;
+        return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Aucune donnée sensible temporaire à effacer
     }
 
     public function getDateCreation(): ?\DateTime
@@ -125,5 +126,23 @@ class Collaborateur implements PasswordAuthenticatedUserInterface
         $this->roleId = $roleId;
 
         return $this;
+    }
+
+    // UserInterface
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = ['ROLE_USER'];
+        if ($this->roleId && $this->roleId->getLibelle()) {
+            $candidate = 'ROLE_' . strtoupper(preg_replace('/[^A-Za-z0-9_]/', '_', $this->roleId->getLibelle()));
+            if (!in_array($candidate, $roles, true)) {
+                $roles[] = $candidate;
+            }
+        }
+        return array_values(array_unique($roles));
     }
 }
