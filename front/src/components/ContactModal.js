@@ -1,12 +1,12 @@
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from "@mui/material";
 import { useState, useEffect } from "react";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
-export default function CollaborateurModal({ open, onClose, onSave, initialData, roles = [] }) {
-  const [form, setForm] = useState({ nom: "", prenom: "", email: "", password: "", role: "" });
+export default function ContactModal({ open, onClose, onSave, initialData, clients = [] }) {
+  const [form, setForm] = useState({ nom: "", prenom: "", email: "", telephone: "", password: "", client: "" });
   const [errors, setErrors] = useState({ password: "" });
 
   useEffect(() => {
@@ -15,12 +15,13 @@ export default function CollaborateurModal({ open, onClose, onSave, initialData,
         nom: initialData.nom || "",
         prenom: initialData.prenom || "",
         email: initialData.email || "",
+        telephone: initialData.telephone || "",
         password: "",
-        role: initialData.role || "",
+        client: initialData.client || "",
       });
       setErrors({ password: "" });
     } else {
-      setForm({ nom: "", prenom: "", email: "", password: "", role: "" });
+      setForm({ nom: "", prenom: "", email: "", telephone: "", password: "", client: "" });
       setErrors({ password: "" });
     }
   }, [initialData, open]);
@@ -42,44 +43,17 @@ export default function CollaborateurModal({ open, onClose, onSave, initialData,
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{initialData ? "Modifier" : "Ajouter"} un collaborateur</DialogTitle>
+      <DialogTitle>{initialData ? "Modifier" : "Ajouter"} un contact</DialogTitle>
       <DialogContent>
-        <TextField
-          margin="dense"
-          label="Nom"
-          name="nom"
-          value={form.nom}
-          onChange={handleChange}
-          fullWidth
-        />
-        <TextField
-          margin="dense"
-          label="Prénom"
-          name="prenom"
-          value={form.prenom}
-          onChange={handleChange}
-          fullWidth
-        />
-        <TextField
-          margin="dense"
-          label="Email"
-          name="email"
-          type="email"
-          value={form.email}
-          onChange={handleChange}
-          fullWidth
-        />
+        <TextField margin="dense" label="Nom" name="nom" value={form.nom} onChange={handleChange} fullWidth />
+        <TextField margin="dense" label="Prénom" name="prenom" value={form.prenom} onChange={handleChange} fullWidth />
+        <TextField margin="dense" label="Email" name="email" type="email" value={form.email} onChange={handleChange} fullWidth />
+        <TextField margin="dense" label="Téléphone" name="telephone" value={form.telephone} onChange={handleChange} fullWidth />
         <FormControl fullWidth margin="dense">
-          <InputLabel id="role-label">Rôle</InputLabel>
-          <Select
-            labelId="role-label"
-            label="Rôle"
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-          >
-            {roles.map((r) => (
-              <MenuItem key={r.id} value={String(r.id)}>{r.libelle || r.id}</MenuItem>
+          <InputLabel id="client-label">Client</InputLabel>
+          <Select labelId="client-label" label="Client" name="client" value={form.client} onChange={handleChange}>
+            {clients.map((c) => (
+              <MenuItem key={c.id} value={String(c.id)}>{c.nom || c.id}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -98,10 +72,8 @@ export default function CollaborateurModal({ open, onClose, onSave, initialData,
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Annuler</Button>
-        <Button onClick={handleSubmit} variant="contained">
-          {initialData ? "Modifier" : "Ajouter"}
-        </Button>
+        <Button onClick={handleSubmit} variant="contained">{initialData ? "Modifier" : "Ajouter"}</Button>
       </DialogActions>
     </Dialog>
   );
-}
+} 

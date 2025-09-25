@@ -4,22 +4,60 @@ import { Box, Typography, Button } from "@mui/material";
 import GenericDataTable from "../components/GenericDataTable";
 import CollaborateurModal from "../components/CollaborateurModal";
 import { getCollaborateurs, addCollaborateur, updateCollaborateur, deleteCollaborateur } from "../Services/collaborateursService";
+import { getRoles } from "../Services/rolesService";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
   { field: "email", headerName: "Email" },
-  { field: "role", headerName: "Rôle" },
+  { field: "roleLabel", headerName: "Rôle" },
 ];
+
+function extractRoleIdFromIri(iri) {
+  if (typeof iri === "string") {
+    const parts = iri.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "";
+  }
+  if (iri && iri.id) return String(iri.id);
+  return "";
+}
+
+function mapCollaborateurForUI(collaborateur, rolesMap) {
+  const roleId = extractRoleIdFromIri(collaborateur.roleId);
+  const roleLabel = rolesMap[roleId] || roleId || "";
+  return { ...collaborateur, role: roleId, roleLabel };
+}
 
 export default function AdminPage() {
   const [collaborateurs, setCollaborateurs] = useState([]);
+  const [rolesMap, setRolesMap] = useState({});
+  const [rolesList, setRolesList] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
 
   useEffect(() => {
-    getCollaborateurs()
-      .then(setCollaborateurs)
-      .catch(() => setCollaborateurs([]));
+    let isMounted = true;
+    async function load() {
+      try {
+        const roles = await getRoles();
+        const map = roles.reduce((acc, r) => {
+          acc[String(r.id)] = r.libelle || String(r.id);
+          return acc;
+        }, {});
+        if (!isMounted) return;
+        setRolesMap(map);
+        setRolesList(roles);
+        const list = await getCollaborateurs();
+        if (!isMounted) return;
+        setCollaborateurs(list.map((c) => mapCollaborateurForUI(c, map)));
+      } catch (e) {
+        if (!isMounted) return;
+        setCollaborateurs([]);
+      }
+    }
+    load();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleAdd = () => {
@@ -41,12 +79,14 @@ export default function AdminPage() {
   const handleSave = (form) => {
     if (editData) {
       updateCollaborateur(editData.id, form).then((updated) => {
-        setCollaborateurs(collaborateurs.map((c) => (c.id === updated.id ? updated : c)));
+        const mapped = mapCollaborateurForUI(updated, rolesMap);
+        setCollaborateurs(collaborateurs.map((c) => (c.id === mapped.id ? mapped : c)));
         setModalOpen(false);
       });
     } else {
       addCollaborateur(form).then((created) => {
-        setCollaborateurs([...collaborateurs, created]);
+        const mapped = mapCollaborateurForUI(created, rolesMap);
+        setCollaborateurs([...collaborateurs, mapped]);
         setModalOpen(false);
       });
     }
@@ -73,6 +113,7 @@ export default function AdminPage() {
           onClose={() => setModalOpen(false)}
           onSave={handleSave}
           initialData={editData}
+          roles={rolesList}
         />
       </Box>
     </div>

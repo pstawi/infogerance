@@ -8,6 +8,8 @@ import { Link, useLocation } from "react-router-dom";
 const menuItems = [
   { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/" },
   { text: "Collaborateurs", icon: <PeopleIcon />, path: "/admin" },
+  { text: "Clients", icon: <DevicesIcon />, path: "/clients" },
+  { text: "Contacts", icon: <PeopleIcon />, path: "/contacts" },
 ];
 
 export default function Sidebar() {
@@ -22,8 +24,9 @@ export default function Sidebar() {
         [`& .MuiDrawer-paper`]: {
           width: 220,
           boxSizing: "border-box",
-          background: "#23272f",
-          color: "#fff",
+          background: (theme) => theme.palette.background.paper,
+          color: (theme) => theme.palette.text.primary,
+          borderRight: (theme) => `1px solid ${theme.palette.divider}`,
         },
       }}
     >
@@ -36,16 +39,19 @@ export default function Sidebar() {
             to={item.path}
             selected={location.pathname === item.path}
             sx={{
+              borderRadius: 1,
+              mx: 1,
+              my: 0.5,
               "&.Mui-selected": {
-                background: "#2e3440",
-                color: "#00c3ff",
+                background: (theme) => theme.palette.primary.main,
+                color: (theme) => theme.palette.primary.contrastText,
               },
               "&:hover": {
-                background: "#2e3440",
+                background: (theme) => theme.palette.action.hover,
               },
             }}
           >
-            <ListItemIcon sx={{ color: "inherit" }}>{item.icon}</ListItemIcon>
+            <ListItemIcon sx={{ color: "inherit", minWidth: 40 }}>{item.icon}</ListItemIcon>
             <ListItemText primary={item.text} />
           </ListItem>
         ))}
