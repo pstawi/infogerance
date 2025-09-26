@@ -4,7 +4,7 @@ import { Box, Typography, Button } from "@mui/material";
 import GenericDataTable from "../components/GenericDataTable";
 import ClientModal from "../components/ClientModal";
 import { getClients, addClient, updateClient, deleteClient } from "../Services/clientsService";
-import theme from "../theme";
+import { useToast } from "../context/ToastContext";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
@@ -17,9 +17,15 @@ export default function ClientsPage() {
   const [clients, setClients] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
-    getClients().then(setClients).catch(() => setClients([]));
+    getClients()
+      .then(setClients)
+      .catch(() => {
+        setClients([]);
+        showToast("Erreur lors du chargement des clients", { severity: 'error' });
+      });
   }, []);
 
   const handleAdd = () => {
@@ -33,20 +39,31 @@ export default function ClientsPage() {
   };
 
   const handleDelete = (row) => {
-    deleteClient(row.id).then(() => setClients(clients.filter((c) => c.id !== row.id)));
+    deleteClient(row.id)
+      .then(() => {
+        setClients(clients.filter((c) => c.id !== row.id));
+        showToast("Client supprimé", { severity: 'success' });
+      })
+      .catch(() => showToast("Suppression échouée", { severity: 'error' }));
   };
 
   const handleSave = (form) => {
     if (editData) {
-      updateClient(editData.id, form).then((updated) => {
-        setClients(clients.map((c) => (c.id === updated.id ? updated : c)));
-        setModalOpen(false);
-      });
+      updateClient(editData.id, form)
+        .then((updated) => {
+          setClients(clients.map((c) => (c.id === updated.id ? updated : c)));
+          setModalOpen(false);
+          showToast("Client mis à jour", { severity: 'success' });
+        })
+        .catch(() => showToast("Mise à jour échouée", { severity: 'error' }));
     } else {
-      addClient(form).then((created) => {
-        setClients([...clients, created]);
-        setModalOpen(false);
-      });
+      addClient(form)
+        .then((created) => {
+          setClients([...clients, created]);
+          setModalOpen(false);
+          showToast("Client ajouté", { severity: 'success' });
+        })
+        .catch(() => showToast("Création échouée", { severity: 'error' }));
     }
   };
 
@@ -61,16 +78,15 @@ export default function ClientsPage() {
           Ajouter un client
         </Button>
         <GenericDataTable 
-        columns={columns} 
-        rows={clients} 
-        onEdit={handleEdit} 
-        onDelete={handleDelete} 
-        bordered
-        headerAlign="center"
-        cellAlign="center"
-        headerSx={{ fontSize: 14 }}
-        cellSx={{ fontSize: 13 }}
-        headerSx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}
+          columns={columns} 
+          rows={clients} 
+          onEdit={handleEdit} 
+          onDelete={handleDelete} 
+          bordered
+          headerAlign="center"
+          cellAlign="center"
+          headerSx={{ fontSize: 14, backgroundColor: 'primary.main', color: 'primary.contrastText' }}
+          cellSx={{ fontSize: 13 }}
         />
         <ClientModal open={modalOpen} onClose={() => setModalOpen(false)} onSave={handleSave} initialData={editData} />
       </Box>

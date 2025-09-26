@@ -16,10 +16,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response && err.response.status === 401) {
-      // Option: rediriger vers login
-      // window.location.href = "/login";
-    }
+    // Ici on laisse la gestion d’erreur aux appels (avec toasts spécifiques)
+    // if (err?.response?.status === 401) { /* redirection éventuelle */ }
     return Promise.reject(err);
   }
 );

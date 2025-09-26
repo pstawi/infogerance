@@ -37,6 +37,11 @@ export async function getTickets() {
   return fromApiListResponse(res.data);
 }
 
+export async function getTicket(id) {
+  const res = await api.get(`${API_URL}/${id}`, ACCEPT_JSONLD);
+  return res.data;
+}
+
 export async function addTicket(data) {
   const res = await api.post(API_URL, toApiPayload(data), JSONLD_HEADERS);
   return res.data;

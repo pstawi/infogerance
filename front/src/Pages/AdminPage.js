@@ -5,7 +5,7 @@ import GenericDataTable from "../components/GenericDataTable";
 import CollaborateurModal from "../components/CollaborateurModal";
 import { getCollaborateurs, addCollaborateur, updateCollaborateur, deleteCollaborateur } from "../Services/collaborateursService";
 import { getRoles } from "../Services/rolesService";
-import theme from "../theme";
+import { useToast } from "../context/ToastContext";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
@@ -34,6 +34,7 @@ export default function AdminPage() {
   const [rolesList, setRolesList] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     let isMounted = true;
@@ -53,6 +54,7 @@ export default function AdminPage() {
       } catch (e) {
         if (!isMounted) return;
         setCollaborateurs([]);
+        showToast("Erreur lors du chargement des collaborateurs", { severity: 'error' });
       }
     }
     load();
@@ -72,24 +74,33 @@ export default function AdminPage() {
   };
 
   const handleDelete = (collab) => {
-    deleteCollaborateur(collab.id).then(() =>
-      setCollaborateurs(collaborateurs.filter((c) => c.id !== collab.id))
-    );
+    deleteCollaborateur(collab.id)
+      .then(() => {
+        setCollaborateurs(collaborateurs.filter((c) => c.id !== collab.id));
+        showToast("Collaborateur supprimé", { severity: 'success' });
+      })
+      .catch(() => showToast("Suppression échouée", { severity: 'error' }));
   };
 
   const handleSave = (form) => {
     if (editData) {
-      updateCollaborateur(editData.id, form).then((updated) => {
-        const mapped = mapCollaborateurForUI(updated, rolesMap);
-        setCollaborateurs(collaborateurs.map((c) => (c.id === mapped.id ? mapped : c)));
-        setModalOpen(false);
-      });
+      updateCollaborateur(editData.id, form)
+        .then((updated) => {
+          const mapped = mapCollaborateurForUI(updated, rolesMap);
+          setCollaborateurs(collaborateurs.map((c) => (c.id === mapped.id ? mapped : c)));
+          setModalOpen(false);
+          showToast("Collaborateur mis à jour", { severity: 'success' });
+        })
+        .catch(() => showToast("Mise à jour échouée", { severity: 'error' }));
     } else {
-      addCollaborateur(form).then((created) => {
-        const mapped = mapCollaborateurForUI(created, rolesMap);
-        setCollaborateurs([...collaborateurs, mapped]);
-        setModalOpen(false);
-      });
+      addCollaborateur(form)
+        .then((created) => {
+          const mapped = mapCollaborateurForUI(created, rolesMap);
+          setCollaborateurs([...collaborateurs, mapped]);
+          setModalOpen(false);
+          showToast("Collaborateur ajouté", { severity: 'success' });
+        })
+        .catch(() => showToast("Création échouée", { severity: 'error' }));
     }
   };
 
@@ -111,9 +122,8 @@ export default function AdminPage() {
           bordered
           headerAlign="center"
           cellAlign="center"
-          headerSx={{ fontSize: 14 }}
+          headerSx={{ fontSize: 14, backgroundColor: 'primary.main', color: 'primary.contrastText' }}
           cellSx={{ fontSize: 13 }}
-          headerSx={{ backgroundColor: theme.palette.primary.main, color: theme.palette.primary.contrastText }}
         />
         <CollaborateurModal
           open={modalOpen}
