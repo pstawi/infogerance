@@ -9,6 +9,7 @@ import { useToast } from "../context/ToastContext";
 import { formatDate } from "../utils/date";
 import { getTicketAttachments, deleteTicketAttachment } from "../Services/attachmentsService";
 import DeleteIcon from "@mui/icons-material/Delete";
+import api from "../Services/http";
 
 function labelFromIri(iri) {
   if (!iri || typeof iri !== 'string') return '';
@@ -43,6 +44,7 @@ export default function TicketDetailPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [attachments, setAttachments] = useState([]);
+  const [names, setNames] = useState({ client: "", contact: "", collaborateur: "" });
 
   const statutsMap = useMemo(() => statuts.reduce((acc, s) => ({ ...acc, [String(s.id)]: s.libelle }), {}), [statuts]);
 
@@ -57,7 +59,16 @@ export default function TicketDetailPage() {
         setStatutId(labelFromIri(data.statutId));
         setTpsResolution(data.tpsResolution ?? "");
         const atts = await getTicketAttachments(id);
-        if (mounted) setAttachments(atts);
+        if (!mounted) return;
+        setAttachments(atts);
+        // Resolve participant names
+        const [clientName, contactName, collabName] = await Promise.all([
+          resolveClientName(data.clientId),
+          resolveContactName(data.contactId),
+          resolveCollaborateurName(data.collaborateurId),
+        ]);
+        if (!mounted) return;
+        setNames({ client: clientName, contact: contactName, collaborateur: collabName });
       } catch (e) {
         if (!mounted) return;
         setError("Impossible de charger le ticket");
@@ -68,6 +79,34 @@ export default function TicketDetailPage() {
     load();
     return () => { mounted = false; };
   }, [id]);
+
+  async function resolveClientName(iri) {
+    try {
+      if (!iri) return '';
+      const res = await api.get(iri, { headers: { Accept: 'application/ld+json' } });
+      return res.data?.nom || labelFromIri(iri);
+    } catch { return labelFromIri(iri); }
+  }
+
+  async function resolveContactName(iri) {
+    try {
+      if (!iri) return '';
+      const res = await api.get(iri, { headers: { Accept: 'application/ld+json' } });
+      const d = res.data || {};
+      const full = `${d.prenom || ''} ${d.nom || ''}`.trim();
+      return full || labelFromIri(iri);
+    } catch { return labelFromIri(iri); }
+  }
+
+  async function resolveCollaborateurName(iri) {
+    try {
+      if (!iri) return '';
+      const res = await api.get(iri, { headers: { Accept: 'application/ld+json' } });
+      const d = res.data || {};
+      const full = `${d.prenom || ''} ${d.nom || ''}`.trim();
+      return full || labelFromIri(iri);
+    } catch { return labelFromIri(iri); }
+  }
 
   const currentStatutLabel = statutsMap[String(statutId)] || '';
   const requireTps = currentStatutLabel && currentStatutLabel.toLowerCase() === 'terminée';
@@ -171,9 +210,9 @@ export default function TicketDetailPage() {
                 <Paper sx={{ p: 2 }}>
                   <Typography variant="subtitle1" gutterBottom>Participants</Typography>
                   <Divider sx={{ mb: 2 }} />
-                  <Typography variant="body2">Client: {labelFromIri(ticket.clientId)}</Typography>
-                  <Typography variant="body2">Contact: {labelFromIri(ticket.contactId)}</Typography>
-                  <Typography variant="body2">Collaborateur: {labelFromIri(ticket.collaborateurId)}</Typography>
+                  <Typography variant="body2">Client: {names.client || labelFromIri(ticket.clientId)}</Typography>
+                  <Typography variant="body2">Contact: {names.contact || labelFromIri(ticket.contactId)}</Typography>
+                  <Typography variant="body2">Collaborateur: {names.collaborateur || labelFromIri(ticket.collaborateurId)}</Typography>
                 </Paper>
               </Grid>
               <Grid item xs={12} md={6}>
