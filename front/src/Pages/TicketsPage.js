@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { Box, Typography, Button, IconButton, Stack, Chip } from "@mui/material";
+import { Box, Typography, Button, IconButton, Stack, Chip, TextField, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import GenericDataTable from "../components/GenericDataTable";
 import TicketModal from "../components/TicketModal";
 import { getTickets, addTicket, updateTicket, deleteTicket } from "../Services/ticketsService";
@@ -11,6 +11,7 @@ import { getStatuts } from "../Services/statutsService";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
+import { formatDate } from "../utils/date";
 
 const baseColumns = [
   { field: "numeroTicket", headerName: "N°" },
@@ -56,13 +57,20 @@ export default function TicketsPage() {
   const [statutsMap, setStatutsMap] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statutFilter, setStatutFilter] = useState("");
   const navigate = useNavigate();
   const { showToast } = useToast();
 
   const columns = useMemo(() => {
-    return baseColumns.map((c) => c.field !== 'statutLabel' ? c : {
-      ...c,
-      renderCell: (row) => <Chip label={row.statutLabel} color={chipColorForStatut(row.statutLabel)} size="small" />,
+    return baseColumns.map((c) => {
+      if (c.field === 'statutLabel') {
+        return { ...c, renderCell: (row) => <Chip label={row.statutLabel} color={chipColorForStatut(row.statutLabel)} size="small" /> };
+      }
+      if (c.field === 'dateCreation') {
+        return { ...c, renderCell: (row) => formatDate(row.dateCreation) };
+      }
+      return c;
     });
   }, []);
 
@@ -139,7 +147,16 @@ export default function TicketsPage() {
     }
   };
 
-  const rowsWithActions = tickets.map((t) => ({
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    return tickets.filter((t) => {
+      const matchSearch = !s || (String(t.numeroTicket).toLowerCase().includes(s) || String(t.titre || '').toLowerCase().includes(s));
+      const matchStatut = !statutFilter || String(t.statut) === String(statutFilter);
+      return matchSearch && matchStatut;
+    });
+  }, [tickets, search, statutFilter]);
+
+  const rowsWithActions = filtered.map((t) => ({
     ...t,
     actions: (
       <Stack direction="row" spacing={1}>
@@ -157,6 +174,18 @@ export default function TicketsPage() {
         <Typography variant="h5" gutterBottom>
           Gestion des tickets
         </Typography>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }} sx={{ mb: 2 }}>
+          <TextField label="Rechercher (N° ou Titre)" value={search} onChange={(e) => setSearch(e.target.value)} sx={{ maxWidth: 360 }} />
+          <FormControl sx={{ minWidth: 220 }}>
+            <InputLabel id="statut-filter-label">Filtrer par statut</InputLabel>
+            <Select labelId="statut-filter-label" label="Filtrer par statut" value={statutFilter} onChange={(e) => setStatutFilter(e.target.value)}>
+              <MenuItem value="">Tous</MenuItem>
+              {statuts.map((s) => (
+                <MenuItem key={s.id} value={String(s.id)}>{s.libelle}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
         <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mb: 2 }}>
           Créer un ticket
         </Button>

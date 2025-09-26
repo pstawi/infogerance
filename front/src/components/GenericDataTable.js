@@ -49,7 +49,7 @@ export default function GenericDataTable({
             <TableRow key={row.id}>
               {columns.map((col) => (
                 <TableCell key={col.field} align={col.align || cellAlign} sx={bodyCellSx}>
-                  {row[col.field]}
+                  {col.renderCell ? col.renderCell(row) : row[col.field]}
                 </TableCell>
               ))}
               {(onEdit || onDelete) && (

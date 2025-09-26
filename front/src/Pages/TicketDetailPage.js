@@ -6,6 +6,7 @@ import { getTicket, updateTicket } from "../Services/ticketsService";
 import { getStatuts } from "../Services/statutsService";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { formatDate } from "../utils/date";
 
 function labelFromIri(iri) {
   if (!iri || typeof iri !== 'string') return '';
@@ -13,15 +14,16 @@ function labelFromIri(iri) {
   return parts[parts.length - 1] || '';
 }
 
-function formatDate(d) {
-  if (!d) return '';
-  try {
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return d;
-    return dt.toLocaleString();
-  } catch {
-    return d;
-  }
+function chipColorForStatut(label) {
+  if (!label) return 'default';
+  const l = label.toLowerCase();
+  if (l.includes('demande')) return 'default';
+  if (l.includes('affect')) return 'info';
+  if (l.includes('cours')) return 'warning';
+  if (l.includes('attente')) return 'secondary';
+  if (l.includes('termin')) return 'success';
+  if (l.includes('réouvr') || l.includes('reouvr')) return 'error';
+  return 'default';
 }
 
 export default function TicketDetailPage() {
@@ -105,7 +107,7 @@ export default function TicketDetailPage() {
                 <Typography variant="h6">Ticket {ticket.numeroTicket}</Typography>
                 <Typography variant="body2" color="text.secondary">Créé le {formatDate(ticket.dateCreation)}</Typography>
               </Stack>
-              <Chip color="primary" label={`Statut: ${statutsMap[String(labelFromIri(ticket.statutId))] || labelFromIri(ticket.statutId)}`} />
+              <Chip color={chipColorForStatut(statutsMap[String(labelFromIri(ticket.statutId))] || labelFromIri(ticket.statutId))} label={`Statut: ${statutsMap[String(labelFromIri(ticket.statutId))] || labelFromIri(ticket.statutId)}`} />
             </Stack>
 
             {isCollaborateur && (

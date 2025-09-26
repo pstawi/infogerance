@@ -6,11 +6,13 @@ import CollaborateurModal from "../components/CollaborateurModal";
 import { getCollaborateurs, addCollaborateur, updateCollaborateur, deleteCollaborateur } from "../Services/collaborateursService";
 import { getRoles } from "../Services/rolesService";
 import { useToast } from "../context/ToastContext";
+import { formatDate } from "../utils/date";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
   { field: "email", headerName: "Email" },
   { field: "roleLabel", headerName: "Rôle" },
+  { field: "dateCreation", headerName: "Créé le", renderCell: (row) => formatDate(row.dateCreation) },
 ];
 
 function extractRoleIdFromIri(iri) {

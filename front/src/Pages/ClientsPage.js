@@ -5,12 +5,14 @@ import GenericDataTable from "../components/GenericDataTable";
 import ClientModal from "../components/ClientModal";
 import { getClients, addClient, updateClient, deleteClient } from "../Services/clientsService";
 import { useToast } from "../context/ToastContext";
+import { formatDate } from "../utils/date";
 
 const columns = [
   { field: "nom", headerName: "Nom" },
   { field: "adresse", headerName: "Adresse" },
   { field: "telephone", headerName: "Téléphone" },
   { field: "email", headerName: "Email" },
+  { field: "dateCreation", headerName: "Créé le", renderCell: (row) => formatDate(row.dateCreation) },
 ];
 
 export default function ClientsPage() {
