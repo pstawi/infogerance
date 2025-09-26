@@ -3,15 +3,17 @@ import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import PeopleIcon from "@mui/icons-material/People";
 import DevicesIcon from "@mui/icons-material/Devices";
 import WarningIcon from "@mui/icons-material/Warning";
+import PersonIcon from "@mui/icons-material/Person";
 import { Link, useLocation } from "react-router-dom";
 import defaultLogo from "../assets/logo.jpg";
 import { useAuth } from "../context/AuthContext";
 
 const menuItems = [
-  { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/tickets", requiresCollaborateur: false },
-  { text: "Collaborateurs", icon: <PeopleIcon />, path: "/admin", requiresCollaborateur: true },
-  { text: "Clients", icon: <DevicesIcon />, path: "/clients", requiresCollaborateur: true },
-  { text: "Contacts", icon: <PeopleIcon />, path: "/contacts", requiresCollaborateur: true },
+  { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/tickets", requiredRoles: [] },
+  { text: "Collaborateurs", icon: <PeopleIcon />, path: "/admin", requiredRoles: ["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_COLLABORATEUR"] },
+  { text: "Clients", icon: <DevicesIcon />, path: "/clients", requiredRoles: ["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_COLLABORATEUR"] },
+  { text: "Contacts", icon: <PeopleIcon />, path: "/contacts", requiredRoles: ["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_COLLABORATEUR"] },
+  { text: "Mon profil", icon: <PersonIcon />, path: "/profile", requiredRoles: [] },
 ];
 
 const defaultColors = {
@@ -24,12 +26,18 @@ const defaultColors = {
   selectedText: '#ffffff',
 };
 
+function hasAnyRole(userRoles = [], required = []) {
+  if (!required || required.length === 0) return true;
+  const set = new Set(userRoles);
+  return required.some((r) => set.has(r));
+}
+
 export default function Sidebar({ logoHeight = 35, logoWidth, logoSrc, colors = defaultColors }) {
   const location = useLocation();
   const { user } = useAuth();
-  const isCollaborateur = Array.isArray(user?.roles) && user.roles.some((r) => r.startsWith('ROLE_'));
+  const userRoles = Array.isArray(user?.roles) ? user.roles : [];
 
-  const itemsToShow = menuItems.filter((item) => !item.requiresCollaborateur || isCollaborateur);
+  const itemsToShow = menuItems.filter((item) => hasAnyRole(userRoles, item.requiredRoles));
 
   return (
     <Drawer

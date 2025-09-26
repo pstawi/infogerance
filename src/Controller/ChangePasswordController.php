@@ -9,6 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 class ChangePasswordController
 {
@@ -18,7 +19,7 @@ class ChangePasswordController
     ) {}
 
     #[Route('/api/change_password', name: 'api_change_password', methods: ['POST'])]
-    public function __invoke(Request $request, #[CurrentUser] ?Collaborateur $user): JsonResponse
+    public function __invoke(Request $request, #[CurrentUser] ?PasswordAuthenticatedUserInterface $user): JsonResponse
     {
         if (!$user) {
             return new JsonResponse(['message' => 'Unauthorized'], 401);
@@ -38,7 +39,6 @@ class ChangePasswordController
             return new JsonResponse(['message' => 'Mot de passe actuel invalide'], 400);
         }
 
-        // Hash du nouveau mot de passe et sauvegarde
         $hashed = $this->passwordHasher->hashPassword($user, $newPassword);
         $user->setPassword($hashed);
         $this->em->persist($user);

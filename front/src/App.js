@@ -5,6 +5,7 @@ import ClientsPage from "./Pages/ClientsPage";
 import ContactsPage from "./Pages/ContactsPage";
 import TicketsPage from "./Pages/TicketsPage";
 import TicketDetailPage from "./Pages/TicketDetailPage";
+import ProfilePage from "./Pages/ProfilePage";
 import LoginPage from "./Pages/LoginPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
@@ -24,8 +25,10 @@ function RequireAuth({ children }) {
 function RequireCollaborateur({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  const isCollaborateur = Array.isArray(user?.roles) && user.roles.some((r) => r.startsWith('ROLE_'));
-  if (!isCollaborateur) return <Navigate to="/tickets" replace />;
+  const roles = Array.isArray(user?.roles) ? user.roles : [];
+  const allowed = new Set(["ROLE_ADMIN", "ROLE_MANAGER", "ROLE_COLLABORATEUR"]);
+  const isAllowed = roles.some((r) => allowed.has(r));
+  if (!isAllowed) return <Navigate to="/tickets" replace />;
   return children;
 }
 
@@ -65,6 +68,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/" element={<HomePage />} />
+            <Route path="/profile" element={<RequireAuth><WithTopBar><ProfilePage /></WithTopBar></RequireAuth>} />
             <Route path="/tickets" element={<RequireAuth><WithTopBar><TicketsPage /></WithTopBar></RequireAuth>} />
             <Route path="/tickets/:id" element={<RequireAuth><WithTopBar><TicketDetailPage /></WithTopBar></RequireAuth>} />
             <Route path="/admin" element={<RequireAuth><RequireCollaborateur><WithTopBar><AdminPage /></WithTopBar></RequireCollaborateur></RequireAuth>} />

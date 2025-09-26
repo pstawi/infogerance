@@ -5,9 +5,12 @@ namespace App\Entity;
 use App\Repository\ContactRepository;
 use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+
 #[ApiResource]
 #[ORM\Entity(repositoryClass: ContactRepository::class)]
-class Contact
+class Contact implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -108,5 +111,22 @@ class Contact
         $this->clientId = $clientId;
 
         return $this;
+    }
+
+    // UserInterface
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    public function getRoles(): array
+    {
+        // Rôle minimal pour les clients
+        return ['ROLE_CLIENT'];
+    }
+
+    public function eraseCredentials(): void
+    {
+        // Rien à effacer
     }
 }

@@ -6,12 +6,13 @@ import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import { useAuth } from "../context/AuthContext";
 
-export default function TicketModal({ open, onClose, onSave, initialData, clients = [], contacts = [], collaborateurs = [], statuts = [] }) {
+export default function TicketModal({ open, onClose, onSave, initialData, clients = [], contacts = [], collaborateurs = [], statuts = [], onUploadFiles }) {
   const { user } = useAuth();
   const isCollaborateur = Array.isArray(user?.roles) && user.roles.some((r) => r.includes("ROLE_"));
 
   const [form, setForm] = useState({ titre: "", description: "", client: "", contact: "", collaborateur: "", statut: "", tpsResolution: "" });
   const [errors, setErrors] = useState({ titre: "", description: "" });
+  const [files, setFiles] = useState([]);
 
   useEffect(() => {
     if (initialData) {
@@ -25,9 +26,11 @@ export default function TicketModal({ open, onClose, onSave, initialData, client
         tpsResolution: initialData.tpsResolution ?? "",
       });
       setErrors({ titre: "", description: "" });
+      setFiles([]);
     } else {
       setForm({ titre: "", description: "", client: "", contact: "", collaborateur: "", statut: "", tpsResolution: "" });
       setErrors({ titre: "", description: "" });
+      setFiles([]);
     }
   }, [initialData, open]);
 
@@ -38,13 +41,20 @@ export default function TicketModal({ open, onClose, onSave, initialData, client
     }
   };
 
-  const handleSubmit = () => {
+  const handleFiles = (e) => {
+    setFiles(Array.from(e.target.files || []));
+  };
+
+  const handleSubmit = async () => {
     const nextErrors = { titre: "", description: "" };
     if (!form.titre) nextErrors.titre = "Titre requis";
     if (!form.description) nextErrors.description = "Description requise";
     setErrors(nextErrors);
     if (nextErrors.titre || nextErrors.description) return;
-    onSave(form);
+    const result = await onSave(form);
+    if (result && result.id && files.length && onUploadFiles) {
+      await onUploadFiles(result.id, files);
+    }
   };
 
   return (
@@ -78,18 +88,9 @@ export default function TicketModal({ open, onClose, onSave, initialData, client
           </Select>
         </FormControl>
         {isCollaborateur && (
-          <FormControl fullWidth margin="dense">
-            <InputLabel id="collab-label">Collaborateur</InputLabel>
-            <Select labelId="collab-label" label="Collaborateur" name="collaborateur" value={form.collaborateur} onChange={handleChange}>
-              {collaborateurs.map((c) => (
-                <MenuItem key={c.id} value={String(c.id)}>{`${c.prenom || ''} ${c.nom || ''}`.trim() || c.id}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        )}
-        {isCollaborateur && (
           <TextField margin="dense" label="Temps de résolution (min)" name="tpsResolution" type="number" value={form.tpsResolution} onChange={handleChange} fullWidth />
         )}
+        <TextField margin="dense" label="Pièces jointes" type="file" inputProps={{ multiple: true }} onChange={handleFiles} fullWidth />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Annuler</Button>

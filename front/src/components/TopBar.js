@@ -35,6 +35,11 @@ export default function TopBar({ onOpenChangePassword }) {
     navigate("/tickets", { state: { openCreate: true } });
   };
 
+  const goProfile = () => {
+    handleClose();
+    navigate('/profile');
+  };
+
   return (
     <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
       <Toolbar>
@@ -52,6 +57,7 @@ export default function TopBar({ onOpenChangePassword }) {
               {primaryRole && <Chip label={primaryRole} size="small" />}
             </Stack>
           </MenuItem>
+          <MenuItem onClick={goProfile}>Mon profil</MenuItem>
           <MenuItem onClick={handleChangePassword}>Changer le mot de passe</MenuItem>
           <MenuItem onClick={handleLogout}>Se déconnecter</MenuItem>
         </Menu>

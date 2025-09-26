@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Sidebar from "../components/Sidebar";
-import { Box, Typography, Button, IconButton, Stack, Chip, TextField, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { Box, Typography, Button, IconButton, Stack, Chip, TextField, FormControl, InputLabel, Select, MenuItem, Menu, Link } from "@mui/material";
 import GenericDataTable from "../components/GenericDataTable";
 import TicketModal from "../components/TicketModal";
 import { getTickets, addTicket, updateTicket, deleteTicket } from "../Services/ticketsService";
@@ -8,10 +8,12 @@ import { getClients } from "../Services/clientsService";
 import { getContacts } from "../Services/contactsService";
 import { getCollaborateurs } from "../Services/collaborateursService";
 import { getStatuts } from "../Services/statutsService";
+import { uploadTicketAttachment, getTicketAttachments, deleteTicketAttachment } from "../Services/attachmentsService";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useNavigate } from "react-router-dom";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
 import { formatDate } from "../utils/date";
 import { useAuth } from "../context/AuthContext";
@@ -62,7 +64,11 @@ export default function TicketsPage() {
   const [editData, setEditData] = useState(null);
   const [search, setSearch] = useState("");
   const [statutFilter, setStatutFilter] = useState("");
+  const [attMenuAnchor, setAttMenuAnchor] = useState(null);
+  const [attMenuTicketId, setAttMenuTicketId] = useState(null);
+  const [attMenuItems, setAttMenuItems] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const { user } = useAuth();
   const isCollaborateur = Array.isArray(user?.roles) && user.roles.some((r) => r.startsWith('ROLE_'));
@@ -111,6 +117,13 @@ export default function TicketsPage() {
     return () => { mounted = false; };
   }, []);
 
+  useEffect(() => {
+    if (location.state && location.state.openCreate) {
+      setEditData(null);
+      setModalOpen(true);
+    }
+  }, [location.state]);
+
   const handleAdd = () => {
     setEditData(null);
     setModalOpen(true);
@@ -132,25 +145,65 @@ export default function TicketsPage() {
       .catch(() => showToast("Suppression échouée", { severity: 'error' }));
   };
 
+  const uploadFiles = async (ticketId, files) => {
+    try {
+      for (const f of files) {
+        await uploadTicketAttachment(ticketId, f);
+      }
+      showToast("Pièces jointes envoyées", { severity: 'success' });
+    } catch (e) {
+      showToast("Échec de l’upload des pièces jointes", { severity: 'error' });
+    }
+  };
+
   const handleSave = (form) => {
     if (editData) {
-      updateTicket(editData.id, form)
+      return updateTicket(editData.id, form)
         .then((updated) => {
           const mapped = mapTicketForUI(updated, statutsMap);
           setTickets(tickets.map((t) => (t.id === mapped.id ? mapped : t)));
           setModalOpen(false);
           showToast("Ticket mis à jour", { severity: 'success' });
+          return mapped;
         })
-        .catch(() => showToast("Mise à jour échouée", { severity: 'error' }));
+        .catch(() => { showToast("Mise à jour échouée", { severity: 'error' }); });
     } else {
-      addTicket(form)
+      return addTicket(form)
         .then((created) => {
           const mapped = mapTicketForUI(created, statutsMap);
           setTickets([...tickets, mapped]);
           setModalOpen(false);
           showToast("Ticket créé", { severity: 'success' });
+          return mapped;
         })
-        .catch(() => showToast("Création échouée", { severity: 'error' }));
+        .catch(() => { showToast("Création échouée", { severity: 'error' }); });
+    }
+  };
+
+  const openAttachmentsMenu = async (event, ticket) => {
+    setAttMenuAnchor(event.currentTarget);
+    setAttMenuTicketId(ticket.id);
+    try {
+      const items = await getTicketAttachments(ticket.id);
+      setAttMenuItems(items);
+    } catch {
+      setAttMenuItems([]);
+    }
+  };
+
+  const closeAttachmentsMenu = () => {
+    setAttMenuAnchor(null);
+    setAttMenuTicketId(null);
+    setAttMenuItems([]);
+  };
+
+  const handleDeleteAttachment = async (att) => {
+    try {
+      await deleteTicketAttachment(att.id);
+      setAttMenuItems(attMenuItems.filter((a) => a.id !== att.id));
+      showToast("Pièce jointe supprimée", { severity: 'success' });
+    } catch {
+      showToast("Échec de la suppression", { severity: 'error' });
     }
   };
 
@@ -169,6 +222,9 @@ export default function TicketsPage() {
       <Stack direction="row" spacing={1}>
         <IconButton size="small" onClick={() => navigate(`/tickets/${t.id}`)}>
           <VisibilityIcon />
+        </IconButton>
+        <IconButton size="small" onClick={(e) => openAttachmentsMenu(e, t)}>
+          <AttachFileIcon />
         </IconButton>
         {isCollaborateur && (
           <>
@@ -207,10 +263,24 @@ export default function TicketsPage() {
           Créer un ticket
         </Button>
         <GenericDataTable columns={columns} rows={rowsWithActions} />
+        <Menu anchorEl={attMenuAnchor} open={Boolean(attMenuAnchor)} onClose={closeAttachmentsMenu} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} transformOrigin={{ vertical: 'top', horizontal: 'left' }}>
+          {attMenuItems.length === 0 && <MenuItem disabled>Aucune pièce jointe</MenuItem>}
+          {attMenuItems.map((att) => (
+            <MenuItem key={att.id} sx={{ display: 'flex', gap: 1 }}>
+              <Link href={att.url} target="_blank" rel="noopener" underline="hover" sx={{ flex: 1 }}>{att.originalName || att.fileName}</Link>
+              {isCollaborateur && (
+                <IconButton size="small" color="error" onClick={() => handleDeleteAttachment(att)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              )}
+            </MenuItem>
+          ))}
+        </Menu>
         <TicketModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onSave={handleSave}
+          onUploadFiles={uploadFiles}
           initialData={editData}
           clients={clients}
           contacts={contacts}

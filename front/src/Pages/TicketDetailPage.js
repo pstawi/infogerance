@@ -1,12 +1,14 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link as RouterLink } from "react-router-dom";
-import { Box, Chip, CircularProgress, Divider, Grid, Paper, Stack, Typography, Button, FormControl, InputLabel, Select, MenuItem, TextField } from "@mui/material";
+import { Box, Chip, CircularProgress, Divider, Grid, Paper, Stack, Typography, Button, FormControl, InputLabel, Select, MenuItem, TextField, IconButton, Link } from "@mui/material";
 import Sidebar from "../components/Sidebar";
 import { getTicket, updateTicket } from "../Services/ticketsService";
 import { getStatuts } from "../Services/statutsService";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { formatDate } from "../utils/date";
+import { getTicketAttachments, deleteTicketAttachment } from "../Services/attachmentsService";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 function labelFromIri(iri) {
   if (!iri || typeof iri !== 'string') return '';
@@ -40,6 +42,7 @@ export default function TicketDetailPage() {
   const [tpsResolution, setTpsResolution] = useState("");
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const [attachments, setAttachments] = useState([]);
 
   const statutsMap = useMemo(() => statuts.reduce((acc, s) => ({ ...acc, [String(s.id)]: s.libelle }), {}), [statuts]);
 
@@ -53,6 +56,8 @@ export default function TicketDetailPage() {
         setTicket(data);
         setStatutId(labelFromIri(data.statutId));
         setTpsResolution(data.tpsResolution ?? "");
+        const atts = await getTicketAttachments(id);
+        if (mounted) setAttachments(atts);
       } catch (e) {
         if (!mounted) return;
         setError("Impossible de charger le ticket");
@@ -87,6 +92,16 @@ export default function TicketDetailPage() {
       showToast("Échec de la mise à jour du statut", { severity: 'error' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAttachment = async (att) => {
+    try {
+      await deleteTicketAttachment(att.id);
+      setAttachments(attachments.filter((a) => a.id !== att.id));
+      showToast("Pièce jointe supprimée", { severity: 'success' });
+    } catch (e) {
+      showToast("Échec de la suppression de la pièce jointe", { severity: 'error' });
     }
   };
 
@@ -175,6 +190,24 @@ export default function TicketDetailPage() {
                 </Paper>
               </Grid>
             </Grid>
+
+            <Paper sx={{ p: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>Pièces jointes</Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Stack spacing={1}>
+                {attachments.length === 0 && <Typography variant="body2" color="text.secondary">Aucune pièce jointe.</Typography>}
+                {attachments.map((att) => (
+                  <Stack key={att.id} direction="row" alignItems="center" spacing={1}>
+                    <Link href={att.url} target="_blank" rel="noopener">{att.originalName || att.fileName}</Link>
+                    {isCollaborateur && (
+                      <IconButton size="small" color="error" onClick={() => handleDeleteAttachment(att)}>
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Stack>
+                ))}
+              </Stack>
+            </Paper>
 
             <Stack direction="row" gap={1}>
               <Button component={RouterLink} to="/tickets" variant="outlined">Retour</Button>
