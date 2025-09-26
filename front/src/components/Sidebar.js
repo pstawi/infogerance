@@ -5,12 +5,13 @@ import DevicesIcon from "@mui/icons-material/Devices";
 import WarningIcon from "@mui/icons-material/Warning";
 import { Link, useLocation } from "react-router-dom";
 import defaultLogo from "../assets/logo.jpg";
+import { useAuth } from "../context/AuthContext";
 
 const menuItems = [
-  { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/tickets" },
-  { text: "Collaborateurs", icon: <PeopleIcon />, path: "/admin" },
-  { text: "Clients", icon: <DevicesIcon />, path: "/clients" },
-  { text: "Contacts", icon: <PeopleIcon />, path: "/contacts" },
+  { text: "Tickets", icon: <ConfirmationNumberIcon />, path: "/tickets", requiresCollaborateur: false },
+  { text: "Collaborateurs", icon: <PeopleIcon />, path: "/admin", requiresCollaborateur: true },
+  { text: "Clients", icon: <DevicesIcon />, path: "/clients", requiresCollaborateur: true },
+  { text: "Contacts", icon: <PeopleIcon />, path: "/contacts", requiresCollaborateur: true },
 ];
 
 const defaultColors = {
@@ -25,6 +26,10 @@ const defaultColors = {
 
 export default function Sidebar({ logoHeight = 35, logoWidth, logoSrc, colors = defaultColors }) {
   const location = useLocation();
+  const { user } = useAuth();
+  const isCollaborateur = Array.isArray(user?.roles) && user.roles.some((r) => r.startsWith('ROLE_'));
+
+  const itemsToShow = menuItems.filter((item) => !item.requiresCollaborateur || isCollaborateur);
 
   return (
     <Drawer
@@ -44,7 +49,7 @@ export default function Sidebar({ logoHeight = 35, logoWidth, logoSrc, colors = 
         },
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 2, py: 2, background: '#ffffff', borderBottom: (theme) => `1px solid ${colors?.divider ?? theme.palette.divider}` }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, px: 2, py: 2, background: 'transparent', borderBottom: (theme) => `1px solid ${colors?.divider ?? theme.palette.divider}` }}>
         <Box
           component="img"
           src={logoSrc || defaultLogo}
@@ -53,7 +58,7 @@ export default function Sidebar({ logoHeight = 35, logoWidth, logoSrc, colors = 
         />
       </Box>
       <List sx={{ pr: 0 }}>
-        {menuItems.map((item) => (
+        {itemsToShow.map((item) => (
           <ListItem
             button
             key={item.text}

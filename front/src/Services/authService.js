@@ -16,4 +16,9 @@ export function logout() {
 export async function getProfile() {
   const res = await api.get(`/api/me`, { headers: { Accept: "application/ld+json" } });
   return res.data;
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  const res = await api.post(`/api/change_password`, { currentPassword, newPassword }, JSON_HEADERS);
+  return res.data;
 } 

@@ -12,6 +12,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 #[AsDoctrineListener(event: Events::prePersist)]
 #[AsDoctrineListener(event: Events::preUpdate)]
@@ -19,6 +20,7 @@ class TicketSubscriber
 {
     public function __construct(
         private TokenStorageInterface $tokenStorage,
+        private AuthorizationCheckerInterface $auth,
         private EntityManagerInterface $em,
     ) {
     }
@@ -57,6 +59,11 @@ class TicketSubscriber
         $entity = $args->getObject();
         if (!$entity instanceof Ticket) {
             return;
+        }
+
+        // Vérifie le droit d'édition
+        if (!$this->auth->isGranted('TICKET_EDIT', $entity)) {
+            throw new AccessDeniedException('Vous n\'avez pas les droits pour modifier ce ticket.');
         }
 
         // Autoriser uniquement un Collaborateur à changer le statut

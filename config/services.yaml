@@ -16,6 +16,12 @@ services:
     App\:
         resource: '../src/'
 
+    # ensure controllers are public and have controller args
+    App\Controller\:
+        resource: '../src/Controller/'
+        public: true
+        tags: ['controller.service_arguments']
+
     App\Api\Doctrine\Extension\TicketVisibilityExtension:
         tags:
             - { name: 'api_platform.doctrine.orm.query_extension.collection', priority: 64 }

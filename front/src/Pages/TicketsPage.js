@@ -9,9 +9,12 @@ import { getContacts } from "../Services/contactsService";
 import { getCollaborateurs } from "../Services/collaborateursService";
 import { getStatuts } from "../Services/statutsService";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext";
 import { formatDate } from "../utils/date";
+import { useAuth } from "../context/AuthContext";
 
 const baseColumns = [
   { field: "numeroTicket", headerName: "N°" },
@@ -61,6 +64,8 @@ export default function TicketsPage() {
   const [statutFilter, setStatutFilter] = useState("");
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { user } = useAuth();
+  const isCollaborateur = Array.isArray(user?.roles) && user.roles.some((r) => r.startsWith('ROLE_'));
 
   const columns = useMemo(() => {
     return baseColumns.map((c) => {
@@ -112,11 +117,13 @@ export default function TicketsPage() {
   };
 
   const handleEdit = (row) => {
+    if (!isCollaborateur) return;
     setEditData(row);
     setModalOpen(true);
   };
 
   const handleDelete = (row) => {
+    if (!isCollaborateur) return;
     deleteTicket(row.id)
       .then(() => {
         setTickets(tickets.filter((t) => t.id !== row.id));
@@ -163,6 +170,16 @@ export default function TicketsPage() {
         <IconButton size="small" onClick={() => navigate(`/tickets/${t.id}`)}>
           <VisibilityIcon />
         </IconButton>
+        {isCollaborateur && (
+          <>
+            <IconButton size="small" onClick={() => handleEdit(t)}>
+              <EditIcon />
+            </IconButton>
+            <IconButton size="small" color="error" onClick={() => handleDelete(t)}>
+              <DeleteIcon />
+            </IconButton>
+          </>
+        )}
       </Stack>
     ),
   }));
@@ -189,7 +206,7 @@ export default function TicketsPage() {
         <Button variant="contained" color="primary" onClick={handleAdd} sx={{ mb: 2 }}>
           Créer un ticket
         </Button>
-        <GenericDataTable columns={columns} rows={rowsWithActions} onEdit={handleEdit} onDelete={handleDelete} />
+        <GenericDataTable columns={columns} rows={rowsWithActions} />
         <TicketModal
           open={modalOpen}
           onClose={() => setModalOpen(false)}
